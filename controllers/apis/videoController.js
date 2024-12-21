@@ -3,6 +3,7 @@ const path = require('path')
 const CONFIG = require('../../config/config')
 const { checkVideoDuration } = require('../services/videoService')
 const Video = require('../../models/video');
+const ffmpeg = require('fluent-ffmpeg')
 
 
 const storage = multer.diskStorage({
@@ -27,7 +28,6 @@ const uploadVideo = async (req, res) => {
     try {
         upload(req, res, async (err) => {
             if (err) {
-
               res.status(500).send({ message: err.message ? err.message : err });
             } else {
               if (!req.file) {
@@ -57,7 +57,39 @@ const uploadVideo = async (req, res) => {
     }
 }
 
+const trimVideo = async (req, res) => {
+  try {
+    const videoId = req.body.video_id
+    const startTime = req.body.start_time
+    const endTime = req.body.end_time
+    const videoData = await Video.findByPk(videoId, {
+      raw: true
+    })
+    const trimmedVideo = path.join(CONFIG.PROJECT_ROOT, CONFIG.TRIMMED_VIDEOS, `trimmed_vid_${videoData.id}_${Date.now()}${ path.extname(videoData.path)}`)
+    console.log('Trimmed Video', trimmedVideo)
+    ffmpeg(videoData.path)
+      .setStartTime(startTime)
+      .setDuration(endTime - startTime)
+      .output(trimmedVideo)
+      .on('end', () => {
+          res.status(200).json({ message: 'Video trimmed successfully' });
+      })
+      .on('error', (err) => {
+          console.log('Error', err)
+          res.status(500).json({ message: err.message });
+      })
+      .run();
+    console.log('Video Id', videoData)
+  } catch (err) {
+    console.log('Error while trimming a video', err)
+    res.status(500).json({
+      message: 'Error while trimming a video!',
+    });
+  } 
+}
+
 
 module.exports = {
-    uploadVideo
+    uploadVideo,
+    trimVideo
 }

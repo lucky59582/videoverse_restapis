@@ -5,6 +5,7 @@ module.exports = {
     APP_PORT: 3000,
     API_KEY: 'b17ad3cc-1d3c-4de5-894a-c3eab59adb19',
     UPLOAD_VIDEOS: 'upload/videos',
+    TRIMMED_VIDEOS: 'upload/trimmed_videos',
     MIN_DURATION: 10,
     MAX_DURATION: 20,
     MAX_FILE_SIZE: 25,
