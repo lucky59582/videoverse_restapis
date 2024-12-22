@@ -65,6 +65,12 @@ const trimVideo = async (req, res) => {
     const videoId = req.body.video_id
     const startTime = req.body.start_time
     const endTime = req.body.end_time
+
+    if (!startTime || !endTime || !videoId) {
+      res.status(500).json({
+        message: 'Required fields are missing!',
+      });
+    }
     const videoData = await Video.findByPk(videoId, {
       raw: true
     })
@@ -93,6 +99,11 @@ const trimVideo = async (req, res) => {
 const mergeVideo = async (req, res) => {
   try {
     const videoIds  = req.body.video_ids;
+    if (!videoIds || videoIds.length  < 1) {
+      res.status(500).json({
+        message: 'Required fields/values are missing!',
+      });
+    }
     const videoPaths = [];
 
     for (let id of videoIds) {
@@ -149,6 +160,11 @@ const accessVideo = async (req, res) => {
   const videoId = req.query.video_id;
   const token = req.query.token
   try {
+      if (!videoId || !token) {
+        res.status(500).json({
+          message: 'Required fields are missing!',
+        });
+      }
       const videoLink = await Link.findOne({
           where: { videoId, token },
           raw: true
@@ -166,7 +182,7 @@ const accessVideo = async (req, res) => {
       }
       res.sendFile(video.path);
     } catch (err) {
-      console.log('Err', err)
+      console.log('Error while accessing video', err)
       res.status(500).json({ message: 'Error while accessing video' });
     }
 }
