@@ -12,8 +12,10 @@ app.get('/ping', (req,res) => {
 })
 app.use("/api", authMiddleware, appRoutes)
 
-app.listen(CONFIG.APP_PORT, () => {
-    console.log(`Server running on port ${CONFIG.APP_PORT}`)
-})
+if (require.main === module) {
+    app.listen(CONFIG.APP_PORT, () => {
+        console.log(`Server running on port ${CONFIG.APP_PORT}`);
+    });
+}
 
 module.exports = app

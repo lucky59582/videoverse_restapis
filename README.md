@@ -12,6 +12,10 @@ mkdir upload/reencoded_videos
 npm install
 node server.js
 
+# To run the test suite
+change the videos path in test files
+npm run test:coverage
+
 # Authentication for APIs
 using x-api-key as authorisation header for api calls 
 stored the x-api-key in config.js

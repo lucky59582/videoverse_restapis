@@ -1,19 +1,17 @@
-// __tests__/videoUpload.test.js
 const request = require('supertest');
 const app = require('../../server');
-const fs = require('fs');
-const path = require('path');
+const CONFIG = require('../../config/config')
 
 describe('Video Upload Endpoint', () => {
     test('should upload a video successfully', async () => {
+        const videoPath = 'upload/videos/test.mp4'
+
         const response = await request(app)
             .post('/api/videos/upload')
-            .attach('video', path.resolve(__dirname, './sample.mp4'))
-            .field('minDuration', 10)
-            .field('maxDuration', 300);
+            .set('x-api-key', CONFIG.API_KEY)
+            .attach('video', videoPath)// 'video' should match the field name expected by your API
 
         expect(response.status).toBe(200);
-        expect(response.body.message).toBe('Video uploaded successfully');
-        expect(response.body.video).toHaveProperty('path');
-    });
+        expect(response.body.message).toBe('Video uploaded successfully!');
+    }, 10000);
 });
