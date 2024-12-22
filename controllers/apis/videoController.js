@@ -1,10 +1,12 @@
 const multer = require('multer');
-const path = require('path')
-const CONFIG = require('../../config/config')
-const { checkVideoDuration, reencodeVideo } = require('../services/videoService')
+const path = require('path');
+const CONFIG = require('../../config/config');
+const { checkVideoDuration, reencodeVideo } = require('../services/videoService');
 const Video = require('../../models/video');
-const ffmpeg = require('fluent-ffmpeg')
-const fs = require('fs')
+const Link = require('../../models/link');
+const ffmpeg = require('fluent-ffmpeg');
+const fs = require('fs');
+const moment = require('moment');
 
 
 const storage = multer.diskStorage({
@@ -143,9 +145,35 @@ const mergeVideo = async (req, res) => {
   }
 }
 
+const accessVideo = async (req, res) => {
+  const videoId = req.query.video_id;
+  const token = req.query.token
+  try {
+      const videoLink = await Link.findOne({
+          where: { videoId, token },
+          raw: true
+      });
+      if (!videoLink) {
+          return res.status(400).json({ message: 'Invalid link' });
+      }
+      const currentTime = moment().toISOString();
+      if (moment(videoLink.expiryTime).isBefore(currentTime)) {
+          return res.status(400).json({ message: 'Link has expired' });
+      }
+      const video = await Video.findByPk(videoId);
+      if (!video) {
+          return res.status(404).json({ message: 'Video not found' });
+      }
+      res.sendFile(video.path);
+    } catch (err) {
+      console.log('Err', err)
+      res.status(500).json({ message: 'Error while accessing video' });
+    }
+}
 
 module.exports = {
     uploadVideo,
     trimVideo,
-    mergeVideo
+    mergeVideo,
+    accessVideo
 }

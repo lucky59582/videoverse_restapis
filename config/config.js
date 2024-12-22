@@ -11,5 +11,6 @@ module.exports = {
     MIN_DURATION: 10,
     MAX_DURATION: 20,
     MAX_FILE_SIZE: 25,
+    EXPIRY_TIME: 60,
     PROJECT_ROOT
 }
