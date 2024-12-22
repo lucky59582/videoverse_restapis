@@ -1,9 +1,10 @@
 const multer = require('multer');
 const path = require('path')
 const CONFIG = require('../../config/config')
-const { checkVideoDuration } = require('../services/videoService')
+const { checkVideoDuration, reencodeVideo } = require('../services/videoService')
 const Video = require('../../models/video');
 const ffmpeg = require('fluent-ffmpeg')
+const fs = require('fs')
 
 
 const storage = multer.diskStorage({
@@ -79,7 +80,6 @@ const trimVideo = async (req, res) => {
           res.status(500).json({ message: err.message });
       })
       .run();
-    console.log('Video Id', videoData)
   } catch (err) {
     console.log('Error while trimming a video', err)
     res.status(500).json({
@@ -88,8 +88,64 @@ const trimVideo = async (req, res) => {
   } 
 }
 
+const mergeVideo = async (req, res) => {
+  try {
+    const videoIds  = req.body.video_ids;
+    const videoPaths = [];
+
+    for (let id of videoIds) {
+      const video = await Video.findByPk(id, {
+        raw: true
+      });
+      videoPaths.push(video.path);
+    }
+
+    const mergedVideo = path.join(CONFIG.PROJECT_ROOT, CONFIG.MERGED_VIDEOS, `merged_vid_${Date.now()}${path.extname(videoPaths[0])}`)
+    const reencodedPaths = await Promise.all(videoPaths.map((video, index) => reencodeVideo(video, index)));
+    const fileListPath = path.join(CONFIG.PROJECT_ROOT, 'filelist.txt');
+    const fileListContent = reencodedPaths.map(video => `file '${video}'`).join('\n');
+    fs.writeFileSync(fileListPath, fileListContent);
+
+    ffmpeg()
+      .input(fileListPath)
+      .inputOptions('-f', 'concat')
+      .inputOptions('-safe', '0')
+      .outputOptions('-c:v', 'libx264')
+      .outputOptions('-c:a', 'aac') 
+      .output(mergedVideo)
+      .on('start', function (commandLine) {
+        console.log('FFmpeg process started with command: ' + commandLine);
+      })
+      .on('end', function () {
+        console.log('Merging finished!');
+        fs.unlinkSync(fileListPath);
+        reencodedPaths.forEach((video) => {
+          fs.unlink(video, (err) => {
+            if (err) {
+              console.error(`Error deleting file ${video}: `, err);
+            } else {
+              console.log(`Deleted re-encoded video: ${video}`);
+            }
+          });
+        });
+        res.status(200).json({ message: 'Videos merged successfully' });
+      })
+      .on('error', function (err) {
+        console.error('Error: ' + err.message);
+        res.status(500).json({ message: 'Error during video merge', error: err.message });
+      })
+      .run();
+  } catch (err) {
+    console.log('Error while merging videos', err)
+    res.status(500).json({
+      message: 'Error while merging videos!!',
+    });
+  }
+}
+
 
 module.exports = {
     uploadVideo,
-    trimVideo
+    trimVideo,
+    mergeVideo
 }
