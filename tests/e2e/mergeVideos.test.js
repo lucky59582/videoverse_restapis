@@ -7,7 +7,7 @@ describe('Link Sharing Endpoint', () => {
             .post('/api/videos/merge')
             .set('x-api-key', CONFIG.API_KEY)
             .send({
-                "video_ids": [10, 12, 13]
+                "video_ids": [32, 33, 34]
             });
 
         expect(response.status).toBe(200);

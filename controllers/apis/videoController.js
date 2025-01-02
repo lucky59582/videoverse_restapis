@@ -36,13 +36,14 @@ const uploadVideo = async (req, res) => {
               if (!req.file) {
                 res.status(500).send({ message: 'No file uploaded' });
               } else {
-                const videoPath = req.file.path;
+                const fileName = req.file.filename;
+                const videoPath = req.file.path
                 const duration = await checkVideoDuration(videoPath);
                 if (duration < CONFIG.MIN_DURATION || duration > CONFIG.MAX_DURATION) {
                     return res.status(500).json({ message: `Duration must be between ${CONFIG.MIN_DURATION} and ${CONFIG.MAX_DURATION} seconds` });
                 }
                 const video = await Video.create({
-                  path: videoPath,
+                  path: fileName,
                   duration: duration,
                 });
                 res.status(200).json({
@@ -76,7 +77,8 @@ const trimVideo = async (req, res) => {
     })
     const trimmedVideo = path.join(CONFIG.PROJECT_ROOT, CONFIG.TRIMMED_VIDEOS, `trimmed_vid_${videoData.id}_${Date.now()}${ path.extname(videoData.path)}`)
     console.log('Trimmed Video', trimmedVideo)
-    ffmpeg(videoData.path)
+    const videoPath = path.join(CONFIG.PROJECT_ROOT, CONFIG.UPLOAD_VIDEOS, videoData.path)
+    ffmpeg(videoPath)
       .setStartTime(startTime)
       .setDuration(endTime - startTime)
       .output(trimmedVideo)
@@ -110,7 +112,7 @@ const mergeVideo = async (req, res) => {
       const video = await Video.findByPk(id, {
         raw: true
       });
-      videoPaths.push(video.path);
+      videoPaths.push(path.join(CONFIG.PROJECT_ROOT, CONFIG.UPLOAD_VIDEOS, video.path));
     }
 
     const mergedVideo = path.join(CONFIG.PROJECT_ROOT, CONFIG.MERGED_VIDEOS, `merged_vid_${Date.now()}${path.extname(videoPaths[0])}`)

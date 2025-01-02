@@ -8,7 +8,7 @@ describe('Link Sharing Endpoint', () => {
         const response = await request(app)
             .post('/api/links/generate')
             .set('x-api-key', CONFIG.API_KEY)
-            .send({ video_id: 10 });
+            .send({ video_id: 32 });
 
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Link generated successfully');

@@ -7,7 +7,7 @@ describe('Link Sharing Endpoint', () => {
             .post('/api/videos/trim')
             .set('x-api-key', CONFIG.API_KEY)
             .send({
-                "video_id": 10,
+                "video_id": 32,
                 "start_time": 3,
                 "end_time": 10
             });

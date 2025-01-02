@@ -1,10 +1,11 @@
 const request = require('supertest');
 const app = require('../../server');
-const CONFIG = require('../../config/config')
+const CONFIG = require('../../config/config');
+const path = require('path');
 
 describe('Video Upload Endpoint', () => {
     test('should upload a video successfully', async () => {
-        const videoPath = 'upload/videos/test.mp4'
+        const videoPath = path.join(CONFIG.PROJECT_ROOT, CONFIG.UPLOAD_VIDEOS, 'test.mp4')
 
         const response = await request(app)
             .post('/api/videos/upload')
